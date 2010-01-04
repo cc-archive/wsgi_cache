@@ -1,0 +1,9 @@
+*.pyc
+*.pyo
+/wsgi_cache.egg-info
+/eggs
+/develop-eggs
+/bin
+.installed.cfg
+.coverage
+/parts

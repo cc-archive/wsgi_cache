@@ -5,7 +5,9 @@ class CacheMiddleware(object):
     """A WSGI Middleware class that blindly caches the results of requests
     to the disk."""
 
-    def __init__(self, app, global_conf, cache_dir):
+    def __init__(self, app, global_conf, cache_dir,
+                 cache_paths=None):
+
         self.app = app
         self.conf = global_conf
 
@@ -14,6 +16,16 @@ class CacheMiddleware(object):
                                       os.path.normpath(cache_dir))
         if not(os.path.exists(self.cache_dir)):
             os.makedirs(self.cache_dir)
+
+        # store the cache_paths (if any)
+        if cache_paths is None:
+            self.cache_paths = None
+        else:
+            self.cache_paths = [p.strip() for p in cache_paths.split(',')]
+
+            # make sure the values are specified correctly
+            for path in self.cache_paths:
+                assert path[0] == '/'
 
     def resource_name(self, environ):
         """Return the resource name for the request in the provided environ."""
@@ -54,7 +66,7 @@ class CacheMiddleware(object):
 
     __getitem__ = load
 
-    def __call__(self, environ, start_response):
+    def __serve_cached(self, environ, start_response):
 
         identifier = self.resource_name(environ)
         response = {}
@@ -73,3 +85,15 @@ class CacheMiddleware(object):
         start_response(response['status'], response['headers'])
         return response['contents']
 
+    def __call__(self, environ, start_response):
+
+        # see if we should cache this page
+        if self.cache_paths:
+            for cp in self.cache_paths:
+                if environ['PATH_INFO'].startswith(cp):
+                    return self.__serve_cached(environ, start_response)
+
+            # cache_paths was specified and did not match
+            return self.app(environ, start_response)
+
+        return self.__serve_cached(environ, start_response)

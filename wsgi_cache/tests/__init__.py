@@ -138,3 +138,40 @@ def test_app_wrapping():
 
     shutil.rmtree(temp_dir)
 
+def test_cache_paths():
+    """Test that cache paths (paths to cache instead of everything) is 
+    honored."""
+
+    import wsgi_cache
+
+    temp_dir = tempfile.mkdtemp()
+
+    caching_app = TestApp(
+        wsgi_cache.CacheMiddleware(app, {'here':temp_dir}, 'cache',
+                                   cache_paths='/licenses')
+        )
+
+    # make a first request
+    response = caching_app.get('/', extra_environ={'contents':'foo'})
+    assert response.status == '200 OK'
+    assert response.body == 'foo'
+
+    # make a second request; we pass in a different value for 'contents'
+    # in order to verify that this request is not cached
+    response = caching_app.get('/', extra_environ={'contents':'bar'})
+    assert response.status == '200 OK'
+    assert response.body == 'bar'
+
+
+    # make a first request
+    response = caching_app.get('/licenses', extra_environ={'contents':'foo'})
+    assert response.status == '200 OK'
+    assert response.body == 'foo'
+
+    # make a second request; we pass in a different value for 'contents'
+    # in order to verify that we're getting the cached version
+    response = caching_app.get('/licenses', extra_environ={'contents':'bar'})
+    assert response.status == '200 OK'
+    assert response.body == 'foo'
+
+    shutil.rmtree(temp_dir)

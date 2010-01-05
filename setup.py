@@ -12,6 +12,9 @@ setup(
     # scripts and dependencies
     install_requires = [
         'setuptools',
+        ],
+
+    tests_require = [
         'nose',
         'coverage',
         'WebTest',

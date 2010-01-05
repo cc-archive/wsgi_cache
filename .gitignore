@@ -7,3 +7,4 @@
 .installed.cfg
 .coverage
 /parts
+/*.egg

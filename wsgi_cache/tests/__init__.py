@@ -175,3 +175,28 @@ def test_cache_paths():
     assert response.body == 'foo'
 
     shutil.rmtree(temp_dir)
+
+
+def test_requests_with_querystring():
+    """Test that requests with a querystring are not cached."""
+
+    import wsgi_cache
+
+    temp_dir = tempfile.mkdtemp()
+
+    caching_app = TestApp(
+        wsgi_cache.CacheMiddleware(app, {'here':temp_dir}, 'cache')
+        )
+
+    # make a first request
+    response = caching_app.get('/foo?bar=1', extra_environ={'contents':'foo'})
+    assert response.status == '200 OK'
+    assert response.body == 'foo'
+
+    # make a second request; we pass in a different value for 'contents'
+    # in order to verify that this request is not cached
+    response = caching_app.get('/foo?bar=1', extra_environ={'contents':'bar'})
+    assert response.status == '200 OK'
+    assert response.body == 'bar'
+
+    shutil.rmtree(temp_dir)

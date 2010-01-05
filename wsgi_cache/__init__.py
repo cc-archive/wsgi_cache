@@ -31,8 +31,7 @@ class CacheMiddleware(object):
         """Return the resource name for the request in the provided environ."""
 
         # we return [1:] since PATH_INFO starts with a '/'
-        return ("%s?%s" % (environ['PATH_INFO'], environ['QUERY_STRING'])
-                )[1:]
+        return environ['PATH_INFO'][1:]
 
     def resource_cache_name(self, resource):
         """Return the path name to the specified resource in the cache."""
@@ -88,6 +87,11 @@ class CacheMiddleware(object):
     def __call__(self, environ, start_response):
 
         # see if we should cache this page
+        if environ['QUERY_STRING']:
+            # we don't cache pages with a query string
+            return self.app(environ, start_response)
+
+        # see if the requested URL falls within our specified cache_paths
         if self.cache_paths:
             for cp in self.cache_paths:
                 if environ['PATH_INFO'].startswith(cp):

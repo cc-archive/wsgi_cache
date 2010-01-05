@@ -201,3 +201,32 @@ def test_requests_with_querystring():
     assert response.body == 'bar'
 
     shutil.rmtree(temp_dir)
+
+def test_custom_content_type():
+    """A custom content-type can be specified in the configuration,
+    which will be used for cached replies."""
+
+    import wsgi_cache
+
+    temp_dir = tempfile.mkdtemp()
+
+    caching_app = TestApp(
+        wsgi_cache.CacheMiddleware(app, {'here':temp_dir}, 'cache',
+                                   content_type='text/plain')
+        )
+
+    # make a first request
+    response = caching_app.get('/foo', extra_environ={'contents':'foo'})
+    assert response.status == '200 OK'
+    assert response.headers['Content-type'] == 'text/test'
+    assert response.body == 'foo'
+
+    # make a second request; we should get the cached value, text/plain
+    response = caching_app.get('/foo', extra_environ={'contents':'bar'})
+    assert response.status == '200 OK'
+    assert response.body == 'foo'
+    print response.headers
+    assert response.headers['Content-type'] == 'text/plain'
+
+    shutil.rmtree(temp_dir)
+    

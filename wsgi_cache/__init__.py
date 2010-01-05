@@ -11,7 +11,7 @@ class CacheMiddleware(object):
 
         self.app = app
         self.conf = global_conf
-        self.content_type = 'text/html'
+        self.content_type = content_type
 
         # determine the cache dir and make sure it exists
         self.cache_dir = os.path.join(global_conf.get('here'), 
@@ -74,7 +74,7 @@ class CacheMiddleware(object):
         identifier = self.resource_name(environ)
         response = dict(
             status = '200 OK',
-            headers = [('Content-Type', self.content_type)],
+            headers = [('Content-type', self.content_type)],
             )
 
         def sr(status, headers):

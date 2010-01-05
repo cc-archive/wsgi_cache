@@ -101,7 +101,7 @@ def test_caching():
 
     # generate some nonsense to store
     contents = hashlib.sha1(str(datetime.datetime.now())).digest()
-    
+
     # when we start out, nothing is cached
     assert caching.cached('test') == False
 
@@ -109,7 +109,8 @@ def test_caching():
     caching.store('test', contents)
 
     # assert that we can retrieve it correctly
-    assert caching.load('test') == contents
+    # -- we "".join the response since it's returning an iterator
+    assert "".join(caching.load('test')) == contents
 
     shutil.rmtree(temp_dir)
 
@@ -126,13 +127,13 @@ def test_app_wrapping():
         )
 
     # make a first request
-    response = caching_app.get('/', extra_environ={'contents':'foo'})
+    response = caching_app.get('/index.html', extra_environ={'contents':'foo'})
     assert response.status == '200 OK'
     assert response.body == 'foo'
 
     # make a second request; we pass in a different value for 'contents'
     # in order to verify that we're getting the cached version
-    response = caching_app.get('/', extra_environ={'contents':'bar'})
+    response = caching_app.get('/index.html', extra_environ={'contents':'bar'})
     assert response.status == '200 OK'
     assert response.body == 'foo'
 
@@ -152,13 +153,13 @@ def test_cache_paths():
         )
 
     # make a first request
-    response = caching_app.get('/', extra_environ={'contents':'foo'})
+    response = caching_app.get('/index.html', extra_environ={'contents':'foo'})
     assert response.status == '200 OK'
     assert response.body == 'foo'
 
     # make a second request; we pass in a different value for 'contents'
     # in order to verify that this request is not cached
-    response = caching_app.get('/', extra_environ={'contents':'bar'})
+    response = caching_app.get('/index.html', extra_environ={'contents':'bar'})
     assert response.status == '200 OK'
     assert response.body == 'bar'
 

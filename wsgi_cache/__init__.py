@@ -6,10 +6,12 @@ class CacheMiddleware(object):
     to the disk."""
 
     def __init__(self, app, global_conf, cache_dir,
+                 content_type='text/html',
                  cache_paths=None):
 
         self.app = app
         self.conf = global_conf
+        self.content_type = 'text/html'
 
         # determine the cache dir and make sure it exists
         self.cache_dir = os.path.join(global_conf.get('here'), 
@@ -53,22 +55,27 @@ class CacheMiddleware(object):
         if not os.path.exists(os.path.dirname(cache_filename)):
             os.makedirs(os.path.dirname(cache_filename))
 
-        # pickle the contents and store them
-        pickle.dump(contents, file(cache_filename, 'w'))
+        # store the response contents
+        cache = file(cache_filename, 'w')
+        for line in contents:
+            cache.write(line)
 
     __setitem__ = store
 
     def load(self, resource):
         """Load the resource from the cache."""
 
-        return pickle.load(file(self.resource_cache_name(resource), 'r'))
+        return iter(file(self.resource_cache_name(resource), 'r'))
 
     __getitem__ = load
 
     def __serve_cached(self, environ, start_response):
 
         identifier = self.resource_name(environ)
-        response = {}
+        response = dict(
+            status = '200 OK',
+            headers = [('Content-Type', self.content_type)],
+            )
 
         def sr(status, headers):
             response['status'] = status
@@ -76,10 +83,10 @@ class CacheMiddleware(object):
             
         # look up the page in the cache first
         if self.cached(identifier):
-            response = self.load(identifier)
+            response['contents'] = self.load(identifier)
         else:
             response['contents'] = self.app(environ, sr)
-            self.store(identifier, response)
+            self.store(identifier, response['contents'])
 
         start_response(response['status'], response['headers'])
         return response['contents']

@@ -44,6 +44,9 @@ def test_resource_cache_name():
     assert caching.resource_cache_name('foo').startswith(
         os.path.join(temp_dir, 'cache'))
 
+    # Test for urls that end with a /
+    assert caching.resource_cache_name('bar/baz/').endswith('__index.html')
+
     shutil.rmtree(temp_dir)
 
 def test_resource_is_cached():
@@ -61,6 +64,12 @@ def test_resource_is_cached():
     # touch the file to signal it's been cached
     file(os.path.join(temp_dir, 'cache', 'bar'), 'w').write('\n')
     assert caching.cached('bar')
+
+    # Test for urls that end with a /
+    os.mkdir(os.path.join(temp_dir, 'cache', 'baz'))
+    file(os.path.join(
+            temp_dir, 'cache', 'baz', '__index.html'), 'w').write('\n')
+    assert caching.cached('baz/')
 
     shutil.rmtree(temp_dir)
 

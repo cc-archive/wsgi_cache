@@ -7,11 +7,12 @@ class CacheMiddleware(object):
 
     def __init__(self, app, global_conf, cache_dir,
                  content_type='text/html',
-                 cache_paths=None):
-
+                 cache_paths=None,
+                 directory_index='__index.html'):
         self.app = app
         self.conf = global_conf
         self.content_type = content_type
+        self.directory_index = directory_index
 
         # determine the cache dir and make sure it exists
         self.cache_dir = os.path.join(global_conf.get('here'), 
@@ -37,8 +38,11 @@ class CacheMiddleware(object):
 
     def resource_cache_name(self, resource):
         """Return the path name to the specified resource in the cache."""
+        cache_name = os.path.join(self.cache_dir, resource)
+        if resource.endswith('/'):
+            cache_name = os.path.join(cache_name, self.directory_index)
 
-        return os.path.join(self.cache_dir, resource)
+        return cache_name
 
     def cached(self, resource):
         """Return True if the specified resource is cached; the resource is

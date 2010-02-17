@@ -42,7 +42,7 @@ this situation, it can be configured as a filter::
 The ``cache_dir`` is the only required configuration parameter, and
 will be interpreted as relative to ``global_conf['here']``.
 
-``wsgi_cache`` also supports two additional configuration parameters:
+``wsgi_cache`` also supports three additional configuration parameters:
 
 * content_type
     Specifies the content type used when serving cached resources; see
@@ -52,6 +52,13 @@ will be interpreted as relative to ``global_conf['here']``.
     A comma separated list of paths, starting with a ``/``, that
     specifies the paths to cache.  If specified, only requests to
     paths starting with one of these strings will be cached.
+* directory_index
+    When accessing a path that ends in a ``/`` (like ``/monkeys/``),
+    wsgi_cache needs to create a special filename.  By default this is
+    ``__index.html``.  So by default, caching the page ``/monkeys/``
+    saves to the file ``${path_to_cache}/monkeys/__index.html``; if we
+    set directory_index to ``dir_x`` it would save to
+    ``${path_to_cache}/monkeys/dirx``.
 
 Behavior
 ========

@@ -239,3 +239,22 @@ def test_custom_content_type():
 
     shutil.rmtree(temp_dir)
     
+
+def test_custom_directory_index():
+    """
+    A specific directory_index value can be supplied to the config, which
+    will affect the filename portion of a directory like-url.
+    """
+    import wsgi_cache
+
+    temp_dir = tempfile.mkdtemp()
+
+    caching = wsgi_cache.CacheMiddleware(
+        app, {'here':temp_dir}, 'cache',
+        directory_index='__linooks__')
+
+    caching.store('foo/bar/', 'testcontents')
+    data = file(os.path.join(temp_dir, 'cache',
+                             'foo/bar', '__linooks__')).read()
+
+    assert data == 'testcontents'

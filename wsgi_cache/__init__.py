@@ -47,8 +47,11 @@ class CacheMiddleware(object):
     def cached(self, resource):
         """Return True if the specified resource is cached; the resource is
         the cache identifier."""
+        cache_name = self.resource_cache_name(resource)
 
-        return os.path.exists(self.resource_cache_name(resource))
+        return (
+            os.path.exists(cache_name)
+            and not os.path.isdir(cache_name))
 
     def store(self, resource, contents):
         """Store the resource contents in the cache."""

@@ -90,7 +90,8 @@ class CacheMiddleware(object):
             response['contents'] = self.load(identifier)
         else:
             response['contents'] = self.app(environ, sr)
-            self.store(identifier, response['contents'])
+            if response['status'] == '200 OK':
+                self.store(identifier, response['contents'])
 
         start_response(response['status'], response['headers'])
         return response['contents']

@@ -67,6 +67,8 @@ class CacheMiddleware(object):
         for line in contents:
             cache.write(line)
 
+        cache.close()
+
     __setitem__ = store
 
     def load(self, resource):

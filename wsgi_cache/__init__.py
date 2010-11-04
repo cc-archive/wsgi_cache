@@ -94,8 +94,13 @@ class CacheMiddleware(object):
         if self.cached(identifier):
             response['contents'] = self.load(identifier)
         else:
+            # page is not cached, call the wrapped application
             response['contents'] = self.app(environ, sr)
-            if response['status'] == '200 OK':
+
+            # make sure the app returns 200 OK and does not specify no-cache
+            if (response['status'] == '200 OK' and 
+                ('Cache-Control', 'no-cache') not in response['headers']):
+
                 self.store(identifier, response['contents'])
 
         start_response(response['status'], response['headers'])

@@ -4,15 +4,7 @@ import shutil
 
 from webtest import TestApp
 
-TESTING_STATUS = '200 OK'
-TESTING_HEADERS = [('Content-Type', 'text/test')]
-
-def app(environ, start_response):
-    """A dummy app that emits sentinel values we can use for testing."""
-
-    start_response(TESTING_STATUS, TESTING_HEADERS)
-
-    return [environ['contents']]
+from app import app
 
 def test_initialization():
     """The cache_dir will be created relative to global_conf['here'] if 
@@ -183,6 +175,40 @@ def test_cache_paths():
     response = caching_app.get('/licenses', extra_environ={'contents':'bar'})
     assert response.status == '200 OK'
     assert response.body == 'foo'
+
+    shutil.rmtree(temp_dir)
+
+
+def test_respect_cache_control():
+    """If the response includes a Cache-Control: no-cache header, it
+    will not be cached."""
+
+    import wsgi_cache
+
+    temp_dir = tempfile.mkdtemp()
+
+    caching_app = TestApp(
+        wsgi_cache.CacheMiddleware(app, {'here':temp_dir}, 'cache',
+                                   cache_paths='/licenses')
+        )
+    
+    # make a request that is in cache_paths, and emit cache-control
+    response = caching_app.get('/licenses/by/3.0/es/',
+                               extra_environ={'contents':'foo',
+                                              'cc.headers':[
+                ('Cache-Control', 'no-cache')]})
+    assert response.status == '200 OK'
+    assert response.body == 'foo'
+
+    # repeat the request with different contents
+    response = caching_app.get('/licenses/by/3.0/es/',
+                               extra_environ={'contents':'bar',
+                                              'cc.headers':[
+                ('Cache-Control', 'no-cache')]})
+    assert response.status == '200 OK'
+
+    # check that it was not cached
+    assert response.body == 'bar'
 
     shutil.rmtree(temp_dir)
 

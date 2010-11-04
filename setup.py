@@ -10,7 +10,7 @@ def read(*rnames):
 
 setup(
     name = "wsgi_cache",
-    version = "0.1.3",
+    version = "0.2",
     packages = ['wsgi_cache'],
     
     # scripts and dependencies

@@ -1,3 +1,4 @@
+import fcntl
 import os
 import cPickle as pickle
 
@@ -64,9 +65,12 @@ class CacheMiddleware(object):
 
         # store the response contents
         cache = file(cache_filename, 'w')
+        fcntl.lockf(cache, fcntl.LOCK_EX)
+
         for line in contents:
             cache.write(line)
 
+        fcntl.lockf(cache, fcntl.LOCK_UN)
         cache.close()
 
     __setitem__ = store

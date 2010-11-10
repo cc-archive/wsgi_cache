@@ -65,7 +65,12 @@ class CacheMiddleware(object):
 
         # store the response contents
         cache = file(cache_filename, 'w')
-        fcntl.lockf(cache, fcntl.LOCK_EX)
+        try:
+            fcntl.lockf(cache, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except IOError:
+            # If something else is locking the file, don't block on
+            # the lock, just pass it by
+            return
 
         for line in contents:
             cache.write(line)

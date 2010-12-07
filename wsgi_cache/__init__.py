@@ -64,19 +64,20 @@ class CacheMiddleware(object):
             os.makedirs(os.path.dirname(cache_filename))
 
         # store the response contents
-        cache = file(cache_filename, 'w')
         try:
+            cache = file(cache_filename, 'w')
             fcntl.lockf(cache, fcntl.LOCK_EX | fcntl.LOCK_NB)
+
+            for line in contents:
+                cache.write(line)
+
+            fcntl.lockf(cache, fcntl.LOCK_UN)
         except IOError:
             # If something else is locking the file, don't block on
             # the lock, just pass it by
             return
-
-        for line in contents:
-            cache.write(line)
-
-        fcntl.lockf(cache, fcntl.LOCK_UN)
-        cache.close()
+        finally:
+            cache.close()
 
     __setitem__ = store
 

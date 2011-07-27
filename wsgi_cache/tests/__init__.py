@@ -79,13 +79,39 @@ def test_cache_subdirs_are_created():
     assert caching.cached('foo/bar') == False
 
     # store the file
-    caching.store('foo/bar', '')
+    caching.store('foo/bar', 'aoe')
 
     # the subdirectory should have been created
     assert os.path.exists(os.path.join(temp_dir, 'cache', 'foo'))
     assert os.path.exists(os.path.join(temp_dir, 'cache', 'foo', 'bar'))
     
     assert caching.cached('foo/bar')
+
+    shutil.rmtree(temp_dir)
+
+def test_caching_zero_size():
+    """Zero-size files in cache should be ignored."""
+
+    import wsgi_cache
+
+    temp_dir = tempfile.mkdtemp()
+
+    caching = wsgi_cache.CacheMiddleware(app, {'here':temp_dir}, 'cache')
+
+    # when we start out, nothing is cached
+    assert caching.cached('cache_misshap') == False
+
+    # store the file with no data
+    caching.store('cache_misshap', '')
+
+    # verify that the zero sized cache entry is skipped
+    assert caching.cached('cache_misshap') == False
+
+    # store the file again, but with data
+    caching.store('cache_misshap', 'aoe')
+
+    # verify that the cache entry with data is fetched
+    assert caching.cached('cache_misshap')
 
     shutil.rmtree(temp_dir)
 

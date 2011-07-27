@@ -52,6 +52,7 @@ class CacheMiddleware(object):
 
         return (
             os.path.exists(cache_name)
+            and not os.path.getsize(cache_name) == 0
             and not os.path.isdir(cache_name))
 
     def store(self, resource, contents):

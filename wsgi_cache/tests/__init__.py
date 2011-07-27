@@ -96,7 +96,7 @@ def test_caching_zero_size():
 
     temp_dir = tempfile.mkdtemp()
 
-    caching = wsgi_cache.CacheMiddleware(app, {'here':temp_dir}, 'cache')
+    caching = wsgi_cache.CacheMiddleware(app, {'here': temp_dir}, 'cache')
 
     # when we start out, nothing is cached
     assert caching.cached('cache_misshap') == False
